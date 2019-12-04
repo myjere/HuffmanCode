@@ -76,7 +76,7 @@ def er_yuan_huo_fu_man_bian_ma(picture):  #编码函数，返回编码表以及�
     global  bian_ma_biao
     for e in ye_zi_list:  #构造编码表
         new_change_node = e
-        bian_ma_biao.setdefault(e.code, "")
+        bian_ma_biao.setdefault(e.code, "")#如果字典中包含有给定键，则返回该键对应的值，否则返回为该键设置的值。
         while new_change_node!=head:
             if new_change_node.parent.left == new_change_node:
                 bian_ma_biao[e.code] = "1" + bian_ma_biao[e.code]
@@ -97,6 +97,7 @@ def er_yuan_huo_fu_man_bian_ma(picture):  #编码函数，返回编码表以及�
 
 def zi_jie_xie_ru():
     pppp = open('result.txt', 'r')
+    #readlines返回列表，包含所有的行。strip移除字符串头尾指定的字符序列。
     pppp = pppp.readlines()[0].strip('\n')
     str = pppp
     yu_shu = 8 - pppp.__len__() % 8
