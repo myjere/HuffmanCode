@@ -47,7 +47,7 @@ def buildtree(listnode):
         listnode = sorted(listnode,key=lambda x:x.weight)
     return listnode
 
-def encode(inputfile):
+def encode(inputfile,resultoutput):
     picture = PIL.Image.open(inputfile)
     picture = picture.convert('L') 
     width = picture.size[0]
@@ -86,7 +86,7 @@ def encode(inputfile):
                 if str(img[i,j]) == key:
                     result = result+values
     print(result)
-    file = open('result.txt','w')
+    file = open(resultoutput,'w')
     file.write(result)
 
 def compress(outputfile):
@@ -136,37 +136,38 @@ def compress(outputfile):
     file.write(struct.pack("B",remainder))
     print("Compress Finished")
 
-    def decode(resultfile,inputfile,outputfile):
-        f = open(outputfile,'w')
-        tp = open(resultfile,'r')
-        tp = tp.readlines()[0].strip('\n')
-        l = ((tp.__len__() - tp.__len__()%8)/8)+2
-        list = []
-        for i in range(l):
-            file = open(str(inputfile),'rb')
-            file.seek(i)
-            (a,) = struct.unpack("B",file.read(1))
-            list.append(a)
-        file.close()
-        result = ''
-        for i in range(len(list)-2):
-            b = ''
-            #bin:返回一个整数的二进制形式
-            for j in range(8-len(bin(list[i])[2:])):
-                b = b + '0'
-            binary = b + bin(list[i])[2:]
-            result = result + binary
-        remainder = 8-list[-1]
-        last = bin(list[-2])[2:]
-        if last.__len__() != remainder:
-            b = ''
-            for j in range(8-remainder-last.__len__()):
-                b = b + '0'
-            binary = b+bin(list[-2])[2:]
-            result = result + binary
-        if last.__len__() == remainder:
-            result = result + bin(list[-2])[2:]
-        f.write(result)
+def decode(resultfile,inputfile,outputfile):
+    f = open(outputfile,'w')
+    tp = open(resultfile,'r')
+    tp = tp.readlines()[0].strip('\n')
+    l = int((tp.__len__() - tp.__len__()%8)/8)+2
+    list = []
+    for i in range(l):
+        file = open(inputfile,'rb')
+        file.seek(i)
+        (a,) = struct.unpack("B",file.read(1))
+        print(a)
+        list.append(a)
+    file.close()
+    result = ''
+    for i in range(len(list)-2):
+        b = ''
+        #bin:返回一个整数的二进制形式
+        for j in range(8-len(bin(list[i])[2:])):
+            b = b + '0'
+        binary = b + bin(list[i])[2:]
+        result = result + binary
+    remainder = 8-list[-1]
+    last = bin(list[-2])[2:]
+    if last.__len__() != remainder:
+        b = ''
+        for j in range(8-remainder-last.__len__()):
+            b = b + '0'
+        binary = b+bin(list[-2])[2:]
+        result = result + binary
+    if last.__len__() == remainder:
+        result = result + bin(list[-2])[2:]
+    f.write(result)
 
 def decompress(inputfile,outputfile):
     file = open(inputfile,'r')
@@ -192,8 +193,13 @@ def decompress(inputfile,outputfile):
     print("Decompress Finished")
 
 if __name__ == '__main__':
-    encode(input("输入待压缩文件名：\n"))
-    compress(input("输入压缩后文件名：\n"))
+    inputcode = input("输入操作：1.压缩文件 2.解压文件\n")
+    if inputcode == '1':
+        encode(input("输入待压缩文件名：\n"),input("输入result文件储存路径：\n"))
+        compress(input("输入压缩后文件名：\n"))
+    if inputcode == '2':
+        decode(input("输入result文件：\n"),input("输入待解压文件：\n"),input("输入解码后的文件名：\n"))
+        decompress(input("输入解码后的文件名：\n"),input("输入还原图像名：\n"))
 
 
     
