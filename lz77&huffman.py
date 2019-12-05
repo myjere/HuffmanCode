@@ -3,6 +3,8 @@ LZ77编码与Huffman编码结合压缩
 """
 import PIL.Image
 import struct
+picturewidth = 0
+pictureheight = 0
 frequency = {}
 nodelist = []
 codeformat = {}
@@ -50,6 +52,10 @@ def encode(inputfile):
     picture = picture.convert('L') 
     width = picture.size[0]
     height = picture.size[1]
+    global pictureheight
+    pictureheight = height
+    global picturewidth
+    picturewidth = width
     img = picture.load()
     list = []
     for i in range(0,width):
@@ -129,6 +135,61 @@ def compress(outputfile):
         file.write(struct.pack("B",char))
     file.write(struct.pack("B",remainder))
     print("Compress Finished")
+
+    def decode(resultfile,inputfile,outputfile):
+        f = open(outputfile,'w')
+        tp = open(resultfile,'r')
+        tp = tp.readlines()[0].strip('\n')
+        l = ((tp.__len__() - tp.__len__()%8)/8)+2
+        list = []
+        for i in range(l):
+            file = open(str(inputfile),'rb')
+            file.seek(i)
+            (a,) = struct.unpack("B",file.read(1))
+            list.append(a)
+        file.close()
+        result = ''
+        for i in range(len(list)-2):
+            b = ''
+            #bin:返回一个整数的二进制形式
+            for j in range(8-len(bin(list[i])[2:])):
+                b = b + '0'
+            binary = b + bin(list[i])[2:]
+            result = result + binary
+        remainder = 8-list[-1]
+        last = bin(list[-2])[2:]
+        if last.__len__() != remainder:
+            b = ''
+            for j in range(8-remainder-last.__len__()):
+                b = b + '0'
+            binary = b+bin(list[-2])[2:]
+            result = result + binary
+        if last.__len__() == remainder:
+            result = result + bin(list[-2])[2:]
+        f.write(result)
+
+def decompress(inputfile,outputfile):
+    file = open(inputfile,'r')
+    strlist = file.readlines()[0].strip('\n')
+    i = 0
+    scan = ''
+    recover = []
+    while(i != strlist.__len__()):
+        scan = scan + strlist[i]
+        for key in codeformat.keys():
+            if scan == codeformat[key]:
+                recover.append(key)
+                scan = ''
+                break
+        i += 1
+    p = PIL.Image.new('L',(picturewidth,pictureheight))
+    k = 0
+    for i in range(picturewidth):
+        for j in range(pictureheight):
+            p.putpixel((i,j),(int(recover[k])))
+            k += 1
+    p.save(outputfile)
+    print("Decompress Finished")
 
 if __name__ == '__main__':
     encode(input("输入待压缩文件名：\n"))
