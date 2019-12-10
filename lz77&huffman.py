@@ -47,15 +47,17 @@ def buildtree(listnode):
         listnode = sorted(listnode,key=lambda x:x.weight)
     return listnode
 
-def encode(inputfile,resultoutput):
+def encode(inputfile):
     picture = PIL.Image.open(inputfile)
     picture = picture.convert('L') 
     width = picture.size[0]
     height = picture.size[1]
     global pictureheight
     pictureheight = height
+    print(pictureheight)
     global picturewidth
     picturewidth = width
+    print(picturewidth)
     img = picture.load()
     list = []
     for i in range(0,width):
@@ -86,11 +88,11 @@ def encode(inputfile,resultoutput):
                 if str(img[i,j]) == key:
                     result = result+values
     print(result)
-    file = open(resultoutput,'w')
+    file = open('C:\\Users\\Jeremy\\Desktop\\软件技术基础大作业\\HuffmanCode\\testpicture\\resultoutput','w')
     file.write(result)
 
 def compress(outputfile):
-    temp = open('result.txt','r')
+    temp = open('C:\\Users\\Jeremy\\Desktop\\软件技术基础大作业\\HuffmanCode\\testpicture\\resultoutput','r')
     temp = temp.readlines()[0].strip('\n')
     str = temp
     remainder = 8-temp.__len__()%8
@@ -136,17 +138,18 @@ def compress(outputfile):
     file.write(struct.pack("B",remainder))
     print("Compress Finished")
 
-def decode(resultfile,inputfile,outputfile):
-    f = open(outputfile,'w')
-    tp = open(resultfile,'r')
+def decode(inputfile):
+    f = open('C:\\Users\\Jeremy\\Desktop\\软件技术基础大作业\\HuffmanCode\\testpicture\\decodeoutput','w')
+    tp = open('C:\\Users\\Jeremy\\Desktop\\软件技术基础大作业\\HuffmanCode\\testpicture\\resultoutput','r')
     tp = tp.readlines()[0].strip('\n')
-    l = int((tp.__len__() - tp.__len__()%8)/8)+2
+    l = int((tp.__len__() - tp.__len__()%8)/8)
     list = []
     for i in range(l):
         file = open(inputfile,'rb')
         file.seek(i)
         (a,) = struct.unpack("B",file.read(1))
-        print(a)
+        print("这是第"+str(i)+"个a，值为"+str(a))
+        print(l)
         list.append(a)
     file.close()
     result = ''
@@ -169,8 +172,8 @@ def decode(resultfile,inputfile,outputfile):
         result = result + bin(list[-2])[2:]
     f.write(result)
 
-def decompress(inputfile,outputfile):
-    file = open(inputfile,'r')
+def decompress(outputfile,picturewidth,pictureheight):
+    file = open('C:\\Users\\Jeremy\\Desktop\\软件技术基础大作业\\HuffmanCode\\testpicture\\decodeoutput','r')
     strlist = file.readlines()[0].strip('\n')
     i = 0
     scan = ''
@@ -183,6 +186,8 @@ def decompress(inputfile,outputfile):
                 scan = ''
                 break
         i += 1
+    print(pictureheight)
+    print(picturewidth)
     p = PIL.Image.new('L',(picturewidth,pictureheight))
     k = 0
     for i in range(picturewidth):
@@ -195,12 +200,12 @@ def decompress(inputfile,outputfile):
 if __name__ == '__main__':
     inputcode = input("输入操作：1.压缩文件 2.解压文件\n")
     if inputcode == '1':
-        encode(input("输入待压缩文件名：\n"),input("输入result文件储存路径：\n"))
+        encode(input("输入待压缩文件名：\n"))
         compress(input("输入压缩后文件名：\n"))
     if inputcode == '2':
-        decode(input("输入result文件：\n"),input("输入待解压文件：\n"),input("输入解码后的文件名：\n"))
-        decompress(input("输入解码后的文件名：\n"),input("输入还原图像名：\n"))
-
+        decode(input("输入待解压文件：\n"))
+        decompress('C:\\Users\\Jeremy\\Desktop\\软件技术基础大作业\\HuffmanCode\\testpicture\\output.bmp',800,600)
+        #decompress(input("输入还原图像名：\n"),int(input("输入还原图像像素宽度：\n")),int(input("输入还原图像像素长度：\n")))
 
     
 
