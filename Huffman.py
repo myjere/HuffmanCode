@@ -114,6 +114,8 @@ def encodefile(inputfile):
 					print("encode:", tem ,'%')						#输出压缩进度
 					last = tem
 		i = i + 1
+	#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	print(ec_dict)
 
 	if raw.bit_length() > 1:										#处理文件尾部不足一个字节的数据
 		raw = raw << (8 - (raw.bit_length() - 1))
@@ -122,7 +124,7 @@ def encodefile(inputfile):
 	o.close()
 	print("File encode successful.")
 
-def decodefile(inputfile):
+def decodefile(inputfile,outputfile):
 
 	print("Starting decode...")
 	count = 0
@@ -132,9 +134,10 @@ def decodefile(inputfile):
 	f.seek(0,2)
 	eof = f.tell()
 	f.seek(0)
-	name = inputfile.split('/')
-	outputfile = inputfile.replace(name[len(name)-1], f.readline().decode(encoding="utf-8"))
-	o = open(outputfile.replace('\n','') ,'wb')
+	#name = inputfile.split('/')
+	o = open(outputfile,'wb')
+	#outputfile = inputfile.replace(name[len(name)-1], f.readline().decode(encoding="utf-8"))
+	#o = open(outputfile.replace('\n','') ,'wb')
 	count = int.from_bytes(f.read(2), byteorder = 'big')			#取出结点数量
 	bit_width = int.from_bytes(f.read(1), byteorder = 'big')		#取出编码表字宽
 	i = 0
@@ -193,4 +196,4 @@ if __name__ == '__main__':
 	if input("1：压缩文件\t2：解压文件\n请输入你要执行的操作：") == '1':
 		encodefile(input("请输入要压缩的文件："))
 	else:
-		decodefile(input("请输入要解压的文件："))  
+		decodefile(input("请输入要解压的文件："),'C:\\Users\\Jeremy\\Desktop\\垃圾\\output')  
