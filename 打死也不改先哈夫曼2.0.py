@@ -1,3 +1,11 @@
+'''
+程序说明：
+***逻辑：先对bmp文件进行游程编码，再对游程编码后的文件进行哈夫曼编码
+***优点：对于色块分布明显的图像，可以进一步提高压缩率
+***缺点：对于色块分布不明显的图像，即色彩丰富而复杂的图像，无法有效提高压缩率
+***改进： 1.对于哈夫曼树的构建过程，或可构建k叉哈夫曼树；
+        　2.对于哈夫曼树的构建过程，或可采用最小堆；
+'''
 import sys
 # 修改递归深度限制以便压缩大文件
 sys.setrecursionlimit(1000000)
@@ -25,6 +33,8 @@ def rle(inputfile, outputfile):
         t = f.read(1)
     w.write(int.to_bytes(count, 1, byteorder='big'))
     w.write(last)
+    f.close()
+    w.close()
 '''
 2. 游程编码解压
 '''
@@ -37,6 +47,8 @@ def derle(inputfile, outputfile):
         w.write(int.from_bytes(count, byteorder='big')*byte)
         count = f.read(1)
         byte = f.read(1)
+    w.close()
+    f.close()
 '''
 3. 定义哈夫曼树的节点类HuffNode
 '''
@@ -87,9 +99,17 @@ def encode(echo):
 '''
 6. 文件压缩
 '''
-def compressfile(inputfile,outputfile):
+def compressfile(inputfile):
     print("开始压缩！")
-    f = open(inputfile, 'rb')
+    # 0.进行游程编码压缩
+    print("开始游程编码！")
+    name0 = inputfile.split('.')
+    fileafterrle = name0[0]+'压缩.rle'
+    print(fileafterrle)
+    rle(inputfile,fileafterrle)
+    print("游程编码结束！")
+    print("开始哈夫曼编码！")
+    f = open(fileafterrle, 'rb')
     # 1.初始化
     readwidth = 1  
     i = 0
@@ -157,31 +177,27 @@ def compressfile(inputfile,outputfile):
         raw = raw & (~(1<<raw.bit_length()-1))
         o.write(int.to_bytes(raw,1,byteorder='big'))
     o.close()
-    # 9.进行游程编码压缩
-    name = inputfile.split('.')
-    rleinput = name[0]+'.wr'
-    rle(rleinput,outputfile)
     print("文件压缩完成！")
 '''
 7.文件解压
 '''
-def decompressfile(inputfile,fileafterrle):
+def decompressfile(fileinput):
     print("开始解压！")
-    # 1.进行游程编码的解压
-    derle(inputfile,fileafterrle)
-    # 2.哈夫曼编码解压缩初始化
+    # 1.哈夫曼编码解压缩初始化
+    print("开始哈夫曼解码！")
     count = 0
     count = 0
     raw = 0
     last = 0
-    f = open(fileafterrle,'rb')
+    f = open(fileinput,'rb')
     f.seek(0,2)
     eof = f.tell()
     f.seek(0)
-    # 3.解压信息
-    name = fileafterrle.split('/')
-    outputfile = fileafterrle.replace(name[len(name)-1],f.readline().decode(encoding='utf-8'))
+    # 2.解压信息
+    name = fileinput.split('/')
+    outputfile = fileinput.replace(name[len(name)-1],f.readline().decode(encoding='utf-8'))
     o = open(outputfile.replace('\n',''),'wb')
+    #print(outputfile.replace('\n',''))
     count = int.from_bytes(f.read(2),byteorder = 'big')
     readwidth = int.from_bytes(f.read(1),byteorder = 'big')
     i = 0
@@ -193,14 +209,14 @@ def decompressfile(inputfile,fileafterrle):
     for x in de_dict.keys():
         node_dict[x] = HuffNode(de_dict[x])
         nodes.append(node_dict[x])
-    # 4.重建哈夫曼树和编码表
-    tree =buildtree(nodes)
+    # 3.重建哈夫曼树和编码表
+    hufftree =buildtree(nodes)
     encode(False)
     for x in ec_dict.keys():
         inverse_dict[ec_dict[x]] = x
     i = f.tell()
     data = b''
-    # 5.解压数据写入文件
+    # 4.解压数据写入文件
     while i < eof:
         raw = int.from_bytes(f.read(1),byteorder='big')
         i = i+1
@@ -224,7 +240,17 @@ def decompressfile(inputfile,fileafterrle):
         raw = 0
     f.close()
     o.close()
-    print("解压完成！")
+    # 5.进行游程编码解压，得到源文件
+    print("哈夫曼解码完成！")
+    print("开始游程解码！")
+    rleinput = outputfile.replace('\n','')
+    fileoutput = rleinput.split('.')
+    fileoutput = fileoutput[0]+'还原.bmp'
+    #print(rleinput,fileoutput)
+    derle(rleinput,fileoutput)
+    #derle(fileafterhuffman,fileoutput)
+    print("游程解码完成！")
+    print("文件解压完成！")
 '''
 8.主函数
 '''
@@ -236,23 +262,23 @@ if __name__ == '__main__':
     inverse_dict = {}
     if input("请输入要执行的操作\n1.压缩文件   2.解压文件\n") == '1':
         # 1.批量压缩测试
-        i = 1
-        while i < 5:
-            print("开始第"+str(i)+"张图片压缩！")
-            compressfile('C:\\Users\\Jeremy\\Desktop\\'+str(i)+'.bmp','C:\\Users\\Jeremy\\Desktop\\'+str(i)+'0.wr')
-            i = i+1
+        #i = 1
+        #while i < 6:
+            #print("开始第"+str(i)+"张图片压缩！")
+            #compressfile('C:\\Users\\Jeremy\\Desktop\\'+str(i)+'.bmp','C:\\Users\\Jeremy\\Desktop\\reco\\'+str(i)+'0.wr')
+            #i = i+1
         # 2.固定文件压缩测试
-        #compressfile('C:\\Users\\Wangruirui\\Desktop\\1.bmp','C:\\Users\\Wangruirui\\Desktop\\10.wr')
+        compressfile('C:\\Users\\Jeremy\\Desktop\\2.bmp')
         # 3.自定义文件压缩测试
         #compressfile(input("请输入要压缩的文件：\n"),input("请输入解压后文件：\n"))
     else:
         # 1.批量解压测试
-        i = 1
-        while i < 5:
-            print("开始第"+str(i)+"张图片解压！")
-            decompressfile('C:\\Users\\Jeremy\\Desktop\\'+str(i)+'0.wr','C:\\Users\\Jeremy\\Desktop\\reco\\'+str(i)+'.wr')
-            i = i+1
+        #i = 1
+        #while i < 6:
+            #print("开始第"+str(i)+"张图片解压！")
+            #decompressfile('C:\\Users\\Jeremy\\Desktop\\'+str(i)+'.wr','C:\\Users\\Jeremy\\Desktop\\reco\\'+str(i)+'.bmp')
+            #i = i+1
         # 2.固定文件解压测试
-        #decompressfile('C:\\Users\\Wangruirui\\Desktop\\20.wr','C:\\Users\\Wangruirui\\Desktop\\2.wr')
+        decompressfile('C:\\Users\\Jeremy\\Desktop\\2.wr')
         # 3.自定义文件解压测试
         #decompressfile(input("请输入要解压的文件：\n"),input("请输入游程编码压缩后文件存放位置：\n"))
